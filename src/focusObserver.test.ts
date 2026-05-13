@@ -17,6 +17,12 @@ function createSetup() {
   return { container, btn1, btn2, outside };
 }
 
+function dispatchFocusIn(target: Element) {
+  const event = new FocusEvent('focusin', { bubbles: true });
+  Object.defineProperty(event, 'target', { value: target });
+  document.dispatchEvent(event);
+}
+
 afterEach(() => {
   document.body.innerHTML = '';
   jest.restoreAllMocks();
@@ -29,10 +35,7 @@ describe('createFocusObserver', () => {
     const observer = createFocusObserver({ container, onFocusEscape });
 
     observer.start();
-
-    const event = new FocusEvent('focusin', { bubbles: true });
-    Object.defineProperty(event, 'target', { value: outside });
-    document.dispatchEvent(event);
+    dispatchFocusIn(outside);
 
     expect(onFocusEscape).toHaveBeenCalledWith(outside);
     observer.stop();
@@ -44,10 +47,7 @@ describe('createFocusObserver', () => {
     const observer = createFocusObserver({ container, onFocusEscape });
 
     observer.start();
-
-    const event = new FocusEvent('focusin', { bubbles: true });
-    Object.defineProperty(event, 'target', { value: btn1 });
-    document.dispatchEvent(event);
+    dispatchFocusIn(btn1);
 
     expect(onFocusEscape).not.toHaveBeenCalled();
     observer.stop();
@@ -60,10 +60,7 @@ describe('createFocusObserver', () => {
 
     observer.start();
     observer.stop();
-
-    const event = new FocusEvent('focusin', { bubbles: true });
-    Object.defineProperty(event, 'target', { value: outside });
-    document.dispatchEvent(event);
+    dispatchFocusIn(outside);
 
     expect(onFocusEscape).not.toHaveBeenCalled();
   });
@@ -75,10 +72,7 @@ describe('createFocusObserver', () => {
 
     observer.start();
     observer.start();
-
-    const event = new FocusEvent('focusin', { bubbles: true });
-    Object.defineProperty(event, 'target', { value: outside });
-    document.dispatchEvent(event);
+    dispatchFocusIn(outside);
 
     expect(onFocusEscape).toHaveBeenCalledTimes(1);
     observer.stop();
