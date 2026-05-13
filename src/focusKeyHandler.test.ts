@@ -72,4 +72,13 @@ describe("createFocusKeyHandler", () => {
     expect(onTab).toHaveBeenCalledTimes(1);
     handler.detach();
   });
+
+  it("passes the keyboard event to the handler callback", () => {
+    const onEscape = jest.fn();
+    const handler = createFocusKeyHandler({ onEscape, container });
+    handler.attach();
+    dispatchKeyDown(container, "Escape");
+    expect(onEscape).toHaveBeenCalledWith(expect.objectContaining({ key: "Escape" }));
+    handler.detach();
+  });
 });
