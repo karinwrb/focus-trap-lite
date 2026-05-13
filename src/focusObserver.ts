@@ -13,7 +13,12 @@ export interface FocusObserverOptions {
 export interface FocusObserver {
   start: () => void;
   stop: () => void;
+  isActive: () => boolean;
 }
+
+/** Selector for elements that are natively focusable or explicitly included via tabindex. */
+const FOCUSABLE_SELECTOR =
+  'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
 export function createFocusObserver({
   container,
@@ -33,9 +38,7 @@ export function createFocusObserver({
       onFocusEscape?.(target);
 
       // Redirect focus to the first focusable element inside the container
-      const firstFocusable = container.querySelector<HTMLElement>(
-        'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
-      );
+      const firstFocusable = container.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
       firstFocusable?.focus();
     }
   }
@@ -52,5 +55,10 @@ export function createFocusObserver({
     document.removeEventListener('focusin', handleFocusIn, true);
   }
 
-  return { start, stop };
+  /** Returns whether the observer is currently listening for focus events. */
+  function isActive(): boolean {
+    return active;
+  }
+
+  return { start, stop, isActive };
 }
