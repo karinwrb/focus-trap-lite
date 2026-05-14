@@ -22,17 +22,19 @@ export function pushFocusHistory(): void {
 
 /**
  * Pops the most recent history entry and restores focus to that element.
- * Returns the element focus was restored to, or null if stack was empty.
+ * Returns the element focus was restored to, or null if stack was empty
+ * or the stored element is no longer connected to the document.
  */
 export function popFocusHistory(): Element | null {
   const entry = historyStack.pop();
   if (!entry || !entry.element) return null;
 
   const el = entry.element as HTMLElement;
-  if (typeof el.focus === "function") {
+  if (typeof el.focus === "function" && el.isConnected) {
     el.focus();
+    return entry.element;
   }
-  return entry.element;
+  return null;
 }
 
 /**
