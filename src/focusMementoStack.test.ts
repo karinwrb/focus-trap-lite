@@ -90,4 +90,18 @@ describe('createFocusMementoStack', () => {
     expect(stack.getDepth()).toBe(0);
     expect(stack.peek()).toBeNull();
   });
+
+  it('pop does not restore focus when captured element has been removed from DOM', () => {
+    const a = makeButton('a');
+    a.focus();
+    const stack = createFocusMementoStack();
+    stack.push();
+    // Remove the originally focused element from the DOM
+    a.remove();
+    const ok = stack.pop();
+    expect(ok).toBe(true);
+    // Focus should not land on the detached element
+    expect(document.activeElement).not.toBe(a);
+    expect(stack.getDepth()).toBe(0);
+  });
 });
