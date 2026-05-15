@@ -80,4 +80,18 @@ describe('focusEventBus integration', () => {
     bus.emit({ type: 'focus:released' });
     expect(fn).not.toHaveBeenCalled();
   });
+
+  it('off() removes a specific listener without affecting others', () => {
+    const bus = createFocusEventBus();
+    const fn1 = jest.fn();
+    const fn2 = jest.fn();
+    bus.on('scope:enter', fn1);
+    bus.on('scope:enter', fn2);
+
+    bus.off('scope:enter', fn1);
+    bus.emit({ type: 'scope:enter' });
+
+    expect(fn1).not.toHaveBeenCalled();
+    expect(fn2).toHaveBeenCalledTimes(1);
+  });
 });
