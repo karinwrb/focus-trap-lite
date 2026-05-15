@@ -1,40 +1,34 @@
 /**
- * Focus history module — tracks and restores focus state
- * when a focus trap is activated/deactivated.
+ * focusHistory.ts
+ * Manages a stack of previously focused elements for focus restoration.
  */
 
 export interface FocusHistoryEntry {
-  element: Element | null;
+  element: Element;
   timestamp: number;
 }
 
 const historyStack: FocusHistoryEntry[] = [];
 
 /**
- * Saves the currently focused element onto the history stack.
+ * Push an element onto the focus history stack.
  */
-export function pushFocusHistory(): void {
-  historyStack.push({
-    element: document.activeElement,
-    timestamp: Date.now(),
-  });
+export function pushFocusHistory(element: Element): void {
+  historyStack.push({ element, timestamp: Date.now() });
 }
 
 /**
- * Pops the most recent history entry and restores focus to that element.
- * Returns the element focus was restored to, or null if stack was empty
- * or the stored element is no longer connected to the document.
+ * Pop the most recent entry from the focus history stack.
  */
-export function popFocusHistory(): Element | null {
-  const entry = historyStack.pop();
-  if (!entry || !entry.element) return null;
+export function popFocusHistory(): FocusHistoryEntry | undefined {
+  return historyStack.pop();
+}
 
-  const el = entry.element as HTMLElement;
-  if (typeof el.focus === "function" && el.isConnected) {
-    el.focus();
-    return entry.element;
-  }
-  return null;
+/**
+ * Peek at the most recent entry without removing it.
+ */
+export function peekFocusHistory(): FocusHistoryEntry | undefined {
+  return historyStack[historyStack.length - 1];
 }
 
 /**
@@ -45,17 +39,8 @@ export function getFocusHistoryDepth(): number {
 }
 
 /**
- * Clears all history entries without restoring focus.
+ * Clear all entries from the focus history stack.
  */
 export function clearFocusHistory(): void {
   historyStack.length = 0;
-}
-
-/**
- * Peeks at the top entry without removing it.
- */
-export function peekFocusHistory(): FocusHistoryEntry | null {
-  return historyStack.length > 0
-    ? historyStack[historyStack.length - 1]
-    : null;
 }

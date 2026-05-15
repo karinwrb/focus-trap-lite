@@ -1,85 +1,93 @@
+/**
+ * focusHistory.test.ts
+ */
+
 import {
   pushFocusHistory,
   popFocusHistory,
+  peekFocusHistory,
   getFocusHistoryDepth,
   clearFocusHistory,
-  peekFocusHistory,
 } from "./focusHistory";
 
-function createFocusableButton(label: string): HTMLButtonElement {
+function createFocusableButton(label = "btn"): HTMLButtonElement {
   const btn = document.createElement("button");
   btn.textContent = label;
   document.body.appendChild(btn);
   return btn;
 }
 
-afterEach(() => {
+beforeEach(() => {
   clearFocusHistory();
   document.body.innerHTML = "";
 });
 
-describe("focusHistory", () => {
-  it("starts with an empty stack", () => {
-    expect(getFocusHistoryDepth()).toBe(0);
-  });
-
-  it("pushes the active element onto the stack", () => {
-    const btn = createFocusableButton("trigger");
-    btn.focus();
-
-    pushFocusHistory();
-
+describe("pushFocusHistory / popFocusHistory", () => {
+  it("pushes and pops a single element", () => {
+    const btn = createFocusableButton();
+    pushFocusHistory(btn);
     expect(getFocusHistoryDepth()).toBe(1);
-    expect(peekFocusHistory()?.element).toBe(btn);
-  });
-
-  it("restores focus on pop", () => {
-    const btn = createFocusableButton("trigger");
-    btn.focus();
-    pushFocusHistory();
-
-    // Move focus away
-    const other = createFocusableButton("other");
-    other.focus();
-    expect(document.activeElement).toBe(other);
-
-    const restored = popFocusHistory();
-
-    expect(restored).toBe(btn);
-    expect(document.activeElement).toBe(btn);
+    const entry = popFocusHistory();
+    expect(entry?.element).toBe(btn);
     expect(getFocusHistoryDepth()).toBe(0);
   });
 
-  it("supports nested traps via stacked history", () => {
-    const first = createFocusableButton("first");
-    const second = createFocusableButton("second");
+  it("returns undefined when popping an empty stack", () => {
+    expect(popFocusHistory()).toBeUndefined();
+  });
 
-    first.focus();
-    pushFocusHistory();
+  it("maintains LIFO order", () => {
+    const btn1 = createFocusableButton("a");
+    const btn2 = createFocusableButton("b");
+    pushFocusHistory(btn1);
+    pushFocusHistory(btn2);
+    expect(popFocusHistory()?.element).toBe(btn2);
+    expect(popFocusHistory()?.element).toBe(btn1);
+  });
+});
 
-    second.focus();
-    pushFocusHistory();
+describe("peekFocusHistory", () => {
+  it("returns the top entry without removing it", () => {
+    const btn = createFocusableButton();
+    pushFocusHistory(btn);
+    expect(peekFocusHistory()?.element).toBe(btn);
+    expect(getFocusHistoryDepth()).toBe(1);
+  });
 
+  it("returns undefined on empty stack", () => {
+    expect(peekFocusHistory()).toBeUndefined();
+  });
+});
+
+describe("getFocusHistoryDepth", () => {
+  it("reflects the number of entries pushed", () => {
+    const btn = createFocusableButton();
+    expect(getFocusHistoryDepth()).toBe(0);
+    pushFocusHistory(btn);
+    pushFocusHistory(btn);
     expect(getFocusHistoryDepth()).toBe(2);
-
-    popFocusHistory();
-    expect(document.activeElement).toBe(second);
-
-    popFocusHistory();
-    expect(document.activeElement).toBe(first);
   });
+});
 
-  it("returns null and does nothing when stack is empty", () => {
-    const result = popFocusHistory();
-    expect(result).toBeNull();
-  });
-
-  it("clearFocusHistory empties the stack", () => {
-    const btn = createFocusableButton("x");
-    btn.focus();
-    pushFocusHistory();
-    pushFocusHistory();
+describe("clearFocusHistory", () => {
+  it("empties the stack", () => {
+    const btn = createFocusableButton();
+    pushFocusHistory(btn);
+    pushFocusHistory(btn);
     clearFocusHistory();
     expect(getFocusHistoryDepth()).toBe(0);
+    expect(peekFocusHistory()).toBeUndefined();
+  });
+});
+
+describe("entry timestamp", () => {
+  it("records a numeric timestamp on push", () => {
+    const btn = createFocusableButton();
+    const before = Date.now();
+    pushFocusHistory(btn);
+    const after = Date.now();
+    const entry = peekFocusHistory();
+    expect(entry?.timestamp).toBeGreaterThanOrEqual(before);
+    expect(entry?.timestamp).toBeLessThanOrEqual(after);
   });
 });
